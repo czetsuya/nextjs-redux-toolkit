@@ -49,155 +49,129 @@ const Users: NextPage = () => {
   const [limit, setLimit] = useState(10);
   const [dialog, setDialog] = useState(EMPTY_DIALOG);
   const [alert, setAlert] = useState(EMPTY_ALERT);
-  const {data, error, isLoading} = useGetUsersQuery();
-  const {users, count} = data;
-  const hasUsers = count > 0;
+  const {data, error, isLoading, isSuccess} = useGetUsersQuery();
 
-  // useEffect(() => {
-  //   dispatch(retrieveList({offset: offset * limit, limit}));
-  // }, [dispatch, offset, limit]);
+  const editUser = ({id}) => {
 
-  // useEffect(() => {
-  //   if (status.deleted) {
-  //     resetDialog();
-  //     dispatch(retrieveList({offset: offset * limit, limit}));
-  //     setAlert({
-  //       open: true,
-  //       text: `Successfully deleted user: ${storeUser.id}`,
-  //     });
-  //   }
-  // }, [status, offset, limit, dispatch]);
+  }
 
-  const handleDeleteUser = ({id}) => () => {
-    // dispatch(deleteUser({userId: id}));
-  };
+  const openDialog = (user) => {
 
-  const resetDialog = () => {
-    setDialog(EMPTY_DIALOG);
   }
 
   const resetAlert = () => {
-    // setAlert(EMPTY_ALERT);
-    // dispatch(clearUserStatus());
-    // dispatch(clearUser());
-  };
 
-  const openDialog = (user) => () => {
-    // setDialog({
-    //   open: true,
-    //   title: 'Delete user',
-    //   text: `Delete user: ${user.id}?`,
-    //   onConfirm: handleDeleteUser(user),
-    //   onCancel: () => resetDialog()
-    // });
-  };
-
-  const editUser = ({id}) => () => {
-    router.push(`/users/${id}`);
   }
 
-  return (
-      <React.Fragment>
-        {
-          isLoading ?
-              <div>Loading</div> :
-              <Container maxWidth={"md"} fixed>
-                <TableContainer>
-                  <Table>
-                    <TableHead>
-                      <TableRow>
-                        <TableCell colSpan={6} align="right">
-                          <Link href="/users/new">
-                            <Button variant="outlined" color="primary">
-                              <PersonAdd/>
-                            </Button>
-                          </Link>
-                        </TableCell>
-                      </TableRow>
-                      <TableRow>
-                        <TableCell>Id</TableCell>
-                        <TableCell>First name</TableCell>
-                        <TableCell>Last name</TableCell>
-                        <TableCell>Email</TableCell>
-                        <TableCell>Birth date</TableCell>
-                        <TableCell></TableCell>
-                      </TableRow>
-                    </TableHead>
-                    <TableBody>
-                      {hasUsers ? (
-                          users.map((user) => (
-                              <TableRow key={user.id}>
-                                <TableCell>{user.id}</TableCell>
-                                <TableCell>{user.firstName}</TableCell>
-                                <TableCell>{user.lastName}</TableCell>
-                                <TableCell>{user.email}</TableCell>
-                                <TableCell>
-                                  {moment.utc(user.birthDate).format('MM-DD-YYYY')}
-                                </TableCell>
-                                <TableCell sx={{textAlign: "right"}}>
-                                  <ButtonGroup>
-                                    <Button onClick={editUser(user)}>
-                                      <Edit/>
-                                    </Button>
-                                    <Button onClick={openDialog(user)}>
-                                      {<Delete/>}
-                                    </Button>
-                                  </ButtonGroup>
-                                </TableCell>
-                              </TableRow>
-                          ))
-                      ) : (
-                          <TableRow>
-                            <TableCell colSpan={6}>No users found.</TableCell>
-                          </TableRow>
-                      )}
-                    </TableBody>
-                    <TableFooter>
-                      <TableRow>
-                        {/*<TablePagination*/}
-                        {/*    component={TableCell}*/}
-                        {/*    count={count}*/}
-                        {/*    page={offset}*/}
-                        {/*    rowsPerPage={limit}*/}
-                        {/*    onChangePage={handleChangePage}*/}
-                        {/*    onChangeRowsPerPage={handleChangeRowsPerPage}*/}
-                        {/*/>*/}
-                      </TableRow>
-                    </TableFooter>
-                  </Table>
-                </TableContainer>
-                <Footer></Footer>
-                <Dialog
-                    open={dialog.open}
-                    onClose={dialog.onCancel}
-                    aria-labelledby="alert-dialog-title"
-                    aria-describedby="alert-dialog-description"
-                >
-                  <DialogTitle id="alert-dialog-title">
-                    {dialog.title}
-                  </DialogTitle>
-                  <DialogContent>
-                    <DialogContentText id="alert-dialog-description">
-                      {dialog.text}
-                    </DialogContentText>
-                  </DialogContent>
-                  <DialogActions>
-                    <Button onClick={dialog.onCancel}>Disagree</Button>
-                    <Button onClick={dialog.onConfirm} autoFocus>
-                      Agree
-                    </Button>
-                  </DialogActions>
-                </Dialog>
-                <Snackbar
-                    open={alert.open}
-                    autoHideDuration={6000}
-                    onClose={resetAlert}
-                    message={alert.text}
-                />
-              </Container>
-        }
-      </React.Fragment>
-  );
+  const renderTable = (users, count: number) => {
+    const hasUsers = count > 0;
+
+    return (
+        <Container maxWidth={"md"} fixed>
+          <TableContainer>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell colSpan={6} align="right">
+                    <Link href="/users/new">
+                      <Button variant="outlined" color="primary">
+                        <PersonAdd/>
+                      </Button>
+                    </Link>
+                  </TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell>Id</TableCell>
+                  <TableCell>First name</TableCell>
+                  <TableCell>Last name</TableCell>
+                  <TableCell>Email</TableCell>
+                  <TableCell>Birth date</TableCell>
+                  <TableCell></TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {hasUsers ? (
+                    users.map((user) => (
+                        <TableRow key={user.id}>
+                          <TableCell>{user.id}</TableCell>
+                          <TableCell>{user.firstName}</TableCell>
+                          <TableCell>{user.lastName}</TableCell>
+                          <TableCell>{user.email}</TableCell>
+                          <TableCell>
+                            {moment.utc(user.birthDate).format('MM-DD-YYYY')}
+                          </TableCell>
+                          <TableCell sx={{textAlign: "right"}}>
+                            <ButtonGroup>
+                              <Button onClick={editUser(user)}>
+                                <Edit/>
+                              </Button>
+                              <Button onClick={openDialog(user)}>
+                                {<Delete/>}
+                              </Button>
+                            </ButtonGroup>
+                          </TableCell>
+                        </TableRow>
+                    ))
+                ) : (
+                    <TableRow>
+                      <TableCell colSpan={6}>No users found.</TableCell>
+                    </TableRow>
+                )}
+              </TableBody>
+              <TableFooter>
+                <TableRow>
+                  {/*<TablePagination*/}
+                  {/*    component={TableCell}*/}
+                  {/*    count={count}*/}
+                  {/*    page={offset}*/}
+                  {/*    rowsPerPage={limit}*/}
+                  {/*    onChangePage={handleChangePage}*/}
+                  {/*    onChangeRowsPerPage={handleChangeRowsPerPage}*/}
+                  {/*/>*/}
+                </TableRow>
+              </TableFooter>
+            </Table>
+          </TableContainer>
+          <Footer></Footer>
+          <Dialog
+              open={dialog.open}
+              onClose={dialog.onCancel}
+              aria-labelledby="alert-dialog-title"
+              aria-describedby="alert-dialog-description"
+          >
+            <DialogTitle id="alert-dialog-title">
+              {dialog.title}
+            </DialogTitle>
+            <DialogContent>
+              <DialogContentText id="alert-dialog-description">
+                {dialog.text}
+              </DialogContentText>
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={dialog.onCancel}>Disagree</Button>
+              <Button onClick={dialog.onConfirm} autoFocus>
+                Agree
+              </Button>
+            </DialogActions>
+          </Dialog>
+          <Snackbar
+              open={alert.open}
+              autoHideDuration={6000}
+              onClose={resetAlert}
+              message={alert.text}
+          />
+        </Container>
+    );
+  }
+
+  if (isSuccess) {
+    console.log(data)
+    const {users, count} = data;
+    return renderTable(users, count);
+
+  } else {
+    return <div>Loading</div>
+  }
 }
 
 export default Users;

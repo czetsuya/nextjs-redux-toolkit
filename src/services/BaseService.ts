@@ -1,7 +1,7 @@
 import {createApi} from "@reduxjs/toolkit/dist/query/react";
-import {BaseApiQuery} from "./BaseApiQuery";
+import {BaseServiceQuery} from "./BaseServiceQuery";
 
 export const BaseService = createApi({
-  baseQuery: BaseApiQuery,
+  baseQuery: BaseServiceQuery,
   endpoints: () => ({}),
 })

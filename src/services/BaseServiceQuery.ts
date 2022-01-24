@@ -1,6 +1,6 @@
 import {BaseQueryFn, FetchArgs, fetchBaseQuery, FetchBaseQueryError} from '@reduxjs/toolkit/query/react';
 
-export const BaseApiQuery: BaseQueryFn<string | FetchArgs, unknown, FetchBaseQueryError> = async (
+export const BaseServiceQuery: BaseQueryFn<string | FetchArgs, unknown, FetchBaseQueryError> = async (
     args,
     api,
     extraOptions
@@ -16,5 +16,6 @@ export const BaseApiQuery: BaseQueryFn<string | FetchArgs, unknown, FetchBaseQue
       return headers;
     }
   });
+
   return rawBaseQuery(args, api, extraOptions);
 };
