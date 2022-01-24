@@ -1,7 +1,9 @@
 import React, {useState} from 'react';
 import {
+  Box,
   Button,
   ButtonGroup,
+  CircularProgress,
   Container,
   Dialog,
   DialogActions,
@@ -9,6 +11,7 @@ import {
   DialogContentText,
   DialogTitle,
   Link,
+  Skeleton,
   Snackbar,
   Table,
   TableBody,
@@ -51,22 +54,23 @@ const Users: NextPage = () => {
   const [limit, setLimit] = useState(10);
   const [dialog, setDialog] = useState(EMPTY_DIALOG);
   const [alert, setAlert] = useState(EMPTY_ALERT);
-  const {data, error, isLoading, isSuccess, isFetching, isError} = useGetUsersQuery();
-  // const [deleteUser, result] = useDeleteUserMutation();
+  const {data, error, isLoading, isSuccess, isFetching, isError} = useGetUsersQuery(1);
+  const [deleteUser, {isLoading: isDeleting, isSuccess: isDeleted}] = useDeleteUserMutation();
 
-  const editUser = (userId: number) => ()=>{
+  const editUser = (userId: number) => () => {
     router.push(`/users/${userId}`);
   }
 
   const handleDeleteUser = (userId: number) => () => {
-    // deleteUser(userId);
+    deleteUser(userId);
+    resetDeleteDialog();
   };
 
   const resetDeleteDialog = () => {
     setDialog(EMPTY_DIALOG);
   }
 
-  const openDeleteDialog = (userId: number) => {
+  const openDeleteDialog = (userId: number) => () => {
     setDialog({
       open: true,
       title: 'Delete user',
@@ -181,12 +185,19 @@ const Users: NextPage = () => {
     );
   }
 
-  if (isFetching || isLoading) {
-    return <div>Loading</div>
+  if (isLoading) {
+    return (
+        <Box sx={{display: 'flex'}}>
+          <CircularProgress/>
+        </Box>
+    );
+  }
+
+  if (isFetching) {
+    return <Skeleton></Skeleton>
   }
 
   if (isSuccess) {
-    console.log(data)
     const {users, count} = data;
     return renderTable(users, count);
   }

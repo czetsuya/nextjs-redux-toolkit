@@ -16,13 +16,15 @@ const INITIAL_STATE: UserState = {}
 export const UsersService = BaseService.injectEndpoints({
   endpoints: (build) => ({
     getUsers: build.query({
-      query: () => '/users'
+      query: () => '/users',
+      providesTags: ['Users']
     }),
     deleteUser: build.mutation({
       query: (userId) => ({
         url: `/users/${userId}`,
-        method: 'DELETE'
-      })
+        method: 'DELETE',
+      }),
+      invalidatesTags: ['Users'],
     })
   }),
   overrideExisting: false,
