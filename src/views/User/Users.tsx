@@ -25,15 +25,17 @@ import {useAppDispatch} from 'services/hooks';
 import {useRouter} from "next/router";
 import {NextPage} from "next";
 import Footer from "../../components/Footer/Footer";
-import {useGetUsersQuery} from "../../services/UserService";
+import {useDeleteUserMutation, useGetUsersQuery} from "../../services/UserService";
 
 
 const EMPTY_DIALOG = {
   open: false,
   text: '',
   title: '',
-  onConfirm: () => null,
-  onCancel: () => null
+  onConfirm: () => {
+  },
+  onCancel: () => {
+  }
 }
 
 const EMPTY_ALERT = {
@@ -49,14 +51,29 @@ const Users: NextPage = () => {
   const [limit, setLimit] = useState(10);
   const [dialog, setDialog] = useState(EMPTY_DIALOG);
   const [alert, setAlert] = useState(EMPTY_ALERT);
-  const {data, error, isLoading, isSuccess} = useGetUsersQuery();
+  const {data, error, isLoading, isSuccess, isFetching, isError} = useGetUsersQuery();
+  // const [deleteUser, result] = useDeleteUserMutation();
 
-  const editUser = ({id}) => {
-
+  const editUser = (userId: number) => ()=>{
+    router.push(`/users/${userId}`);
   }
 
-  const openDialog = (user) => {
+  const handleDeleteUser = (userId: number) => () => {
+    // deleteUser(userId);
+  };
 
+  const resetDeleteDialog = () => {
+    setDialog(EMPTY_DIALOG);
+  }
+
+  const openDeleteDialog = (userId: number) => {
+    setDialog({
+      open: true,
+      title: 'Delete user',
+      text: `Delete user: ${userId}?`,
+      onConfirm: handleDeleteUser(userId),
+      onCancel: () => resetDeleteDialog()
+    });
   }
 
   const resetAlert = () => {
@@ -102,10 +119,10 @@ const Users: NextPage = () => {
                           </TableCell>
                           <TableCell sx={{textAlign: "right"}}>
                             <ButtonGroup>
-                              <Button onClick={editUser(user)}>
+                              <Button onClick={editUser(user.id)}>
                                 <Edit/>
                               </Button>
-                              <Button onClick={openDialog(user)}>
+                              <Button onClick={openDeleteDialog(user.id)}>
                                 {<Delete/>}
                               </Button>
                             </ButtonGroup>
@@ -164,14 +181,21 @@ const Users: NextPage = () => {
     );
   }
 
+  if (isFetching || isLoading) {
+    return <div>Loading</div>
+  }
+
   if (isSuccess) {
     console.log(data)
     const {users, count} = data;
     return renderTable(users, count);
-
-  } else {
-    return <div>Loading</div>
   }
+
+  if (isError) {
+    return <div>Error: {error}</div>
+  }
+
+  return <div>Invalid State</div>;
 }
 
 export default Users;

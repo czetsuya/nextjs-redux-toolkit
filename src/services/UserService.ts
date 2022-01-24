@@ -18,8 +18,14 @@ export const UsersService = BaseService.injectEndpoints({
     getUsers: build.query({
       query: () => '/users'
     }),
+    deleteUser: build.mutation({
+      query: (userId) => ({
+        url: `/users/${userId}`,
+        method: 'DELETE'
+      })
+    })
   }),
   overrideExisting: false,
 })
 
-export const {useGetUsersQuery} = UsersService;
+export const {useGetUsersQuery, useDeleteUserMutation} = UsersService;
