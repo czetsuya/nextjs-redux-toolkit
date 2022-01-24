@@ -1,7 +1,9 @@
-import React, {useEffect, useState} from 'react';
+import React, {useState} from 'react';
 import {
+  Box,
   Button,
   ButtonGroup,
+  CircularProgress,
   Container,
   Dialog,
   DialogActions,
@@ -9,6 +11,7 @@ import {
   DialogContentText,
   DialogTitle,
   Link,
+  Skeleton,
   Snackbar,
   Table,
   TableBody,
@@ -18,29 +21,24 @@ import {
   TableHead,
   TableRow
 } from "@mui/material";
-import {useDispatch, useSelector} from "react-redux";
 import moment from "moment";
 import {Delete, Edit, PersonAdd} from "@mui/icons-material";
+import {useAppDispatch} from 'services/hooks';
 
-import {clearUser, clearUserStatus, deleteUser, retrieveList,} from 'redux/modules/UserModule';
 import {useRouter} from "next/router";
-import Footer from "../Footer/Footer";
 import {NextPage} from "next";
+import Footer from "../../components/Footer/Footer";
+import {useDeleteUserMutation, useGetUsersQuery} from "../../services/UserService";
 
-const useUsers = () =>
-    useSelector(({user: {users, count, status, user}}) => ({
-      users,
-      count,
-      status,
-      storeUser: user
-    }));
 
 const EMPTY_DIALOG = {
   open: false,
   text: '',
   title: '',
-  onConfirm: () => null,
-  onCancel: () => null
+  onConfirm: () => {
+  },
+  onCancel: () => {
+  }
 }
 
 const EMPTY_ALERT = {
@@ -51,153 +49,164 @@ const EMPTY_ALERT = {
 const Users: NextPage = () => {
 
   const router = useRouter();
-  const dispatch = useDispatch();
-  const {users, count, status, storeUser} = useUsers();
-  const hasUsers = !!users && users.length > 0;
+  const dispatch = useAppDispatch();
   const [offset, setOffset] = useState(0);
   const [limit, setLimit] = useState(10);
   const [dialog, setDialog] = useState(EMPTY_DIALOG);
   const [alert, setAlert] = useState(EMPTY_ALERT);
+  const {data, error, isLoading, isSuccess, isFetching, isError} = useGetUsersQuery(1);
+  const [deleteUser, {isLoading: isDeleting, isSuccess: isDeleted}] = useDeleteUserMutation();
 
-  useEffect(() => {
-    dispatch(retrieveList({offset: offset * limit, limit}));
-  }, [dispatch, offset, limit]);
+  const editUser = (userId: number) => () => {
+    router.push(`/users/${userId}`);
+  }
 
-  useEffect(() => {
-    if (status.deleted) {
-      resetDialog();
-      dispatch(retrieveList({offset: offset * limit, limit}));
-      setAlert({
-        open: true,
-        text: `Successfully deleted user: ${storeUser.id}`,
-      });
-    }
-  }, [status, offset, limit, dispatch]);
-
-  const handleDeleteUser = ({id}) => () => {
-    dispatch(deleteUser({userId: id}));
+  const handleDeleteUser = (userId: number) => () => {
+    deleteUser(userId);
+    resetDeleteDialog();
   };
 
-  const resetDialog = () => {
+  const resetDeleteDialog = () => {
     setDialog(EMPTY_DIALOG);
   }
 
-  const resetAlert = () => {
-    setAlert(EMPTY_ALERT);
-    dispatch(clearUserStatus());
-    dispatch(clearUser());
-  };
-
-  const openDialog = (user) => () => {
+  const openDeleteDialog = (userId: number) => () => {
     setDialog({
       open: true,
       title: 'Delete user',
-      text: `Delete user: ${user.id}?`,
-      onConfirm: handleDeleteUser(user),
-      onCancel: () => resetDialog()
+      text: `Delete user: ${userId}?`,
+      onConfirm: handleDeleteUser(userId),
+      onCancel: () => resetDeleteDialog()
     });
-  };
-
-  const editUser = ({id}) => () => {
-    router.push(`/users/${id}`);
   }
 
-  return (
-      <Container maxWidth={"md"} fixed>
-        <TableContainer>
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell colSpan={6} align="right">
-                  <Link href="/users/new">
-                    <Button variant="outlined" color="primary">
-                      <PersonAdd/>
-                    </Button>
-                  </Link>
-                </TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell>Id</TableCell>
-                <TableCell>First name</TableCell>
-                <TableCell>Last name</TableCell>
-                <TableCell>Email</TableCell>
-                <TableCell>Birth date</TableCell>
-                <TableCell></TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {hasUsers ? (
-                  users.map((user) => (
-                      <TableRow key={user.id}>
-                        <TableCell>{user.id}</TableCell>
-                        <TableCell>{user.firstName}</TableCell>
-                        <TableCell>{user.lastName}</TableCell>
-                        <TableCell>{user.email}</TableCell>
-                        <TableCell>
-                          {moment.utc(user.birthDate).format('MM-DD-YYYY')}
-                        </TableCell>
-                        <TableCell sx={{textAlign: "right"}}>
-                          <ButtonGroup>
-                            <Button onClick={editUser(user)}>
-                              <Edit/>
-                            </Button>
-                            <Button onClick={openDialog(user)}>
-                              {<Delete/>}
-                            </Button>
-                          </ButtonGroup>
-                        </TableCell>
-                      </TableRow>
-                  ))
-              ) : (
-                  <TableRow>
-                    <TableCell colSpan={6}>No users found.</TableCell>
-                  </TableRow>
-              )}
-            </TableBody>
-            <TableFooter>
-              <TableRow>
-                {/*<TablePagination*/}
-                {/*    component={TableCell}*/}
-                {/*    count={count}*/}
-                {/*    page={offset}*/}
-                {/*    rowsPerPage={limit}*/}
-                {/*    onChangePage={handleChangePage}*/}
-                {/*    onChangeRowsPerPage={handleChangeRowsPerPage}*/}
-                {/*/>*/}
-              </TableRow>
-            </TableFooter>
-          </Table>
-        </TableContainer>
-        <Footer></Footer>
-        <Dialog
-            open={dialog.open}
-            onClose={dialog.onCancel}
-            aria-labelledby="alert-dialog-title"
-            aria-describedby="alert-dialog-description"
-        >
-          <DialogTitle id="alert-dialog-title">
-            {dialog.title}
-          </DialogTitle>
-          <DialogContent>
-            <DialogContentText id="alert-dialog-description">
-              {dialog.text}
-            </DialogContentText>
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={dialog.onCancel}>Disagree</Button>
-            <Button onClick={dialog.onConfirm} autoFocus>
-              Agree
-            </Button>
-          </DialogActions>
-        </Dialog>
-        <Snackbar
-            open={alert.open}
-            autoHideDuration={6000}
-            onClose={resetAlert}
-            message={alert.text}
-        />
-      </Container>
-  );
+  const resetAlert = () => {
+
+  }
+
+  const renderTable = (users, count: number) => {
+    const hasUsers = count > 0;
+
+    return (
+        <Container maxWidth={"md"} fixed>
+          <TableContainer>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell colSpan={6} align="right">
+                    <Link href="/users/new">
+                      <Button variant="outlined" color="primary">
+                        <PersonAdd/>
+                      </Button>
+                    </Link>
+                  </TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell>Id</TableCell>
+                  <TableCell>First name</TableCell>
+                  <TableCell>Last name</TableCell>
+                  <TableCell>Email</TableCell>
+                  <TableCell>Birth date</TableCell>
+                  <TableCell></TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {hasUsers ? (
+                    users.map((user) => (
+                        <TableRow key={user.id}>
+                          <TableCell>{user.id}</TableCell>
+                          <TableCell>{user.firstName}</TableCell>
+                          <TableCell>{user.lastName}</TableCell>
+                          <TableCell>{user.email}</TableCell>
+                          <TableCell>
+                            {moment.utc(user.birthDate).format('MM-DD-YYYY')}
+                          </TableCell>
+                          <TableCell sx={{textAlign: "right"}}>
+                            <ButtonGroup>
+                              <Button onClick={editUser(user.id)}>
+                                <Edit/>
+                              </Button>
+                              <Button onClick={openDeleteDialog(user.id)}>
+                                {<Delete/>}
+                              </Button>
+                            </ButtonGroup>
+                          </TableCell>
+                        </TableRow>
+                    ))
+                ) : (
+                    <TableRow>
+                      <TableCell colSpan={6}>No users found.</TableCell>
+                    </TableRow>
+                )}
+              </TableBody>
+              <TableFooter>
+                <TableRow>
+                  {/*<TablePagination*/}
+                  {/*    component={TableCell}*/}
+                  {/*    count={count}*/}
+                  {/*    page={offset}*/}
+                  {/*    rowsPerPage={limit}*/}
+                  {/*    onChangePage={handleChangePage}*/}
+                  {/*    onChangeRowsPerPage={handleChangeRowsPerPage}*/}
+                  {/*/>*/}
+                </TableRow>
+              </TableFooter>
+            </Table>
+          </TableContainer>
+          <Footer></Footer>
+          <Dialog
+              open={dialog.open}
+              onClose={dialog.onCancel}
+              aria-labelledby="alert-dialog-title"
+              aria-describedby="alert-dialog-description"
+          >
+            <DialogTitle id="alert-dialog-title">
+              {dialog.title}
+            </DialogTitle>
+            <DialogContent>
+              <DialogContentText id="alert-dialog-description">
+                {dialog.text}
+              </DialogContentText>
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={dialog.onCancel}>Disagree</Button>
+              <Button onClick={dialog.onConfirm} autoFocus>
+                Agree
+              </Button>
+            </DialogActions>
+          </Dialog>
+          <Snackbar
+              open={alert.open}
+              autoHideDuration={6000}
+              onClose={resetAlert}
+              message={alert.text}
+          />
+        </Container>
+    );
+  }
+
+  if (isLoading) {
+    return (
+        <Box sx={{display: 'flex'}}>
+          <CircularProgress/>
+        </Box>
+    );
+  }
+
+  if (isFetching) {
+    return <Skeleton></Skeleton>
+  }
+
+  if (isSuccess) {
+    const {users, count} = data;
+    return renderTable(users, count);
+  }
+
+  if (isError) {
+    return <div>Error: {error}</div>
+  }
+
+  return <div>Invalid State</div>;
 }
 
 export default Users;
