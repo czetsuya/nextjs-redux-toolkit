@@ -1,15 +1,20 @@
 import {PrismaClient} from '@prisma/client';
 import moment from 'moment';
+import {NextApiRequest, NextApiResponse} from "next";
 
-export default async function handle(req, res) {
+export default async function handler(
+    req: NextApiRequest,
+    res: NextApiResponse
+) {
 
   console.log('req params', req.query);
+  console.log('req body', req.body);
 
   const prisma = new PrismaClient();
 
   try {
     if (req.method === 'GET') { // list
-      const {offset = "0", limit = "10"} = req.query;
+      const {offset = "0", limit = "10"}: { offset: string, limit: string } = req.query;
       const users = await prisma.user.findMany({
         skip: parseInt(offset, 10),
         take: parseInt(limit, 10),
@@ -18,12 +23,11 @@ export default async function handle(req, res) {
       res.status(200).json({users, count});
 
     } else if (req.method === 'POST') { // create
+
       const user = req.body;
-      console.log("received data", user);
       if (!!user.birthDate) {
         user.birthDate = moment.utc(user.birthDate).toDate();
       }
-      console.log("posted data", user);
       const result = await prisma.user.create({
         data: {
           ...user,

@@ -1,33 +1,46 @@
 // Need to use the React-specific entry point to import createApi
 import {BaseService} from "./BaseService";
-
-// Define a type for the slice state
-interface UserState {
-  id?: number,
-  firstName?: string,
-  lastName?: string,
-  email?: string,
-  birthDate?: Date
-}
-
-// Define the initial state using that type
-const INITIAL_STATE: UserState = {}
+import {UserPayload} from "./types/UserPayload";
 
 export const UsersService = BaseService.injectEndpoints({
   endpoints: (build) => ({
-    getUsers: build.query({
+    getUsers: build.query<UserPayload[], void>({
       query: () => '/users',
-      providesTags: ['Users']
+      providesTags: [{type: "User", id: "LIST"}]
     }),
-    deleteUser: build.mutation({
-      query: (userId) => ({
-        url: `/users/${userId}`,
+    getUser: build.query<UserPayload, number>({
+      query: (id) => ({
+        url: `/users/${id}`,
+      })
+    }),
+    createUser: build.mutation<UserPayload, Partial<UserPayload>>({
+      query: (body) => ({
+        url: `/users`,
+        method: "POST",
+        body
+      }),
+      invalidatesTags: [{type: "User", id: "LIST"}]
+    }),
+    updateUser: build.mutation<UserPayload, Partial<UserPayload>>({
+      query: ({id, ...body}) => ({
+        url: `/users/${id}`,
+        method: "PUT",
+        body
+      }),
+      invalidatesTags: [{type: "User", id: "LIST"}]
+    }),
+    deleteUser: build.mutation<void, number>({
+      query: (id) => ({
+        url: `/users/${id}`,
         method: 'DELETE',
       }),
-      invalidatesTags: ['Users'],
-    })
+      invalidatesTags: [{type: "User", id: "LIST"}],
+    }),
   }),
-  overrideExisting: false,
+  overrideExisting: true,
 })
 
-export const {useGetUsersQuery, useDeleteUserMutation} = UsersService;
+export const {
+  useGetUsersQuery, useGetUserQuery,
+  useCreateUserMutation, useDeleteUserMutation
+} = UsersService;

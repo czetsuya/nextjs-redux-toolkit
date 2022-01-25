@@ -55,7 +55,7 @@ const Users: NextPage = () => {
   const [dialog, setDialog] = useState(EMPTY_DIALOG);
   const [alert, setAlert] = useState(EMPTY_ALERT);
   const {data, error, isLoading, isSuccess, isFetching, isError} = useGetUsersQuery(1);
-  const [deleteUser, {isLoading: isDeleting, isSuccess: isDeleted}] = useDeleteUserMutation();
+  const [deleteUser, {data: deletedUser, isLoading: isDeleting, isSuccess: isDeleted}] = useDeleteUserMutation();
 
   const editUser = (userId: number) => () => {
     router.push(`/users/${userId}`);
@@ -184,6 +184,13 @@ const Users: NextPage = () => {
         </Container>
     );
   }
+
+  // if (isDeleted) {
+  //   setAlert({
+  //     open: true,
+  //     text: `Successfully deleted user: ${deletedUser.id}`,
+  //   });
+  // }
 
   if (isLoading) {
     return (
