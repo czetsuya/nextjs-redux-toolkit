@@ -13,10 +13,10 @@ export const UsersService = BaseService.injectEndpoints({
         url: `/users/${id}`,
       })
     }),
-    createUser: build.mutation<UserPayload, Partial<UserPayload>>({
-      query: (body) => ({
+    createUser: build.mutation<UserPayload, UserPayload>({
+      query: (body: UserPayload) => ({
         url: `/users`,
-        method: "POST",
+        method: 'POST',
         body
       }),
       invalidatesTags: [{type: "User", id: "LIST"}]
@@ -24,7 +24,7 @@ export const UsersService = BaseService.injectEndpoints({
     updateUser: build.mutation<UserPayload, Partial<UserPayload>>({
       query: ({id, ...body}) => ({
         url: `/users/${id}`,
-        method: "PUT",
+        method: 'PUT',
         body
       }),
       invalidatesTags: [{type: "User", id: "LIST"}]

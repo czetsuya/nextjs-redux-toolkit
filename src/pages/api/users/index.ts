@@ -1,10 +1,11 @@
 import {PrismaClient} from '@prisma/client';
-import moment from 'moment';
 import {NextApiRequest, NextApiResponse} from "next";
+import {UserPayload} from "../../../services/types/UserPayload";
+import moment from "moment";
 
 export default async function handler(
     req: NextApiRequest,
-    res: NextApiResponse
+    res: NextApiResponse<Partial<UserPayload> | UserPayload[]>
 ) {
 
   console.log('req params', req.query);
@@ -28,6 +29,7 @@ export default async function handler(
       if (!!user.birthDate) {
         user.birthDate = moment.utc(user.birthDate).toDate();
       }
+
       const result = await prisma.user.create({
         data: {
           ...user,

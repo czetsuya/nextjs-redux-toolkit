@@ -5,7 +5,7 @@ import {UserPayload} from "../../../services/types/UserPayload";
 
 export default async function handler(
     req: NextApiRequest,
-    res: NextApiResponse
+    res: NextApiResponse<Partial<UserPayload>>
 ) {
   console.log('start request: req params', req.query, req.body);
 

@@ -11,7 +11,7 @@ export const BaseServiceQuery: BaseQueryFn<string | FetchArgs, unknown, FetchBas
     baseUrl: `http://localhost:3000/api/`,
     prepareHeaders: (headers) => {
       headers.set('Authorization', `Bearer ${token}`);
-      headers.set('Content-Type', 'application/hal+json');
+      headers.set('Content-Type', 'application/json');
 
       return headers;
     }
