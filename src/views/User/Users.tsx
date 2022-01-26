@@ -13,6 +13,7 @@ import {
   Link,
   Skeleton,
   Snackbar,
+  SwipeableDrawer,
   Table,
   TableBody,
   TableCell,
@@ -29,6 +30,7 @@ import {useRouter} from "next/router";
 import {NextPage} from "next";
 import Footer from "../../components/Footer/Footer";
 import {useDeleteUserMutation, useGetUsersQuery} from "../../services/UserService";
+import UserDetail from "./UserDetail";
 
 
 const EMPTY_DIALOG = {
@@ -56,10 +58,8 @@ const Users: NextPage = () => {
   const [alert, setAlert] = useState(EMPTY_ALERT);
   const {data, error, isLoading, isSuccess, isFetching, isError} = useGetUsersQuery(1);
   const [deleteUser, {data: deletedUser, isLoading: isDeleting, isSuccess: isDeleted}] = useDeleteUserMutation();
-
-  const editUser = (userId: number) => () => {
-    router.push(`/users/${userId}`);
-  }
+  const drawerBleeding = 56;
+  const [openDrawer, setOpenDrawer] = React.useState(false);
 
   const handleDeleteUser = (userId: number) => () => {
     deleteUser(userId);
@@ -84,6 +84,14 @@ const Users: NextPage = () => {
 
   }
 
+  const editUser = (newOpen: boolean, userId: number) => () => {
+    setOpenDrawer(newOpen);
+  };
+
+  const toggleEditDrawer = (newOpen: boolean) => () => {
+    setOpenDrawer(newOpen);
+  };
+
   const renderTable = (users, count: number) => {
     const hasUsers = count > 0;
 
@@ -94,11 +102,9 @@ const Users: NextPage = () => {
               <TableHead>
                 <TableRow>
                   <TableCell colSpan={6} align="right">
-                    <Link href="/users/new">
-                      <Button variant="outlined" color="primary">
+                      <Button variant="outlined" color="primary" onClick={toggleEditDrawer(true)}>
                         <PersonAdd/>
                       </Button>
-                    </Link>
                   </TableCell>
                 </TableRow>
                 <TableRow>
@@ -123,7 +129,7 @@ const Users: NextPage = () => {
                           </TableCell>
                           <TableCell sx={{textAlign: "right"}}>
                             <ButtonGroup>
-                              <Button onClick={editUser(user.id)}>
+                              <Button onClick={editUser(true, user.id)}>
                                 <Edit/>
                               </Button>
                               <Button onClick={openDeleteDialog(user.id)}>
@@ -181,6 +187,19 @@ const Users: NextPage = () => {
               onClose={resetAlert}
               message={alert.text}
           />
+          <SwipeableDrawer
+              anchor="bottom"
+              open={openDrawer}
+              onClose={toggleEditDrawer(false)}
+              onOpen={toggleEditDrawer(true)}
+              swipeAreaWidth={drawerBleeding}
+              disableSwipeToOpen={false}
+              ModalProps={{
+                keepMounted: true,
+              }}
+          >
+            <UserDetail toggleEditDrawer={toggleEditDrawer}></UserDetail>
+          </SwipeableDrawer>
         </Container>
     );
   }

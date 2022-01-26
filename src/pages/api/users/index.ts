@@ -1,14 +1,14 @@
 import {PrismaClient} from '@prisma/client';
+import moment from 'moment';
 import {NextApiRequest, NextApiResponse} from "next";
-import {UserPayload} from "../../../services/types/UserPayload";
-import moment from "moment";
 
 export default async function handler(
     req: NextApiRequest,
-    res: NextApiResponse<Partial<UserPayload> | UserPayload[]>
+    res: NextApiResponse
 ) {
 
-  console.log('start request: req params', req.query, req.body);
+  console.log('req params', req.query);
+  console.log('req body', req.body);
 
   const prisma = new PrismaClient();
 
@@ -28,7 +28,6 @@ export default async function handler(
       if (!!user.birthDate) {
         user.birthDate = moment.utc(user.birthDate).toDate();
       }
-
       const result = await prisma.user.create({
         data: {
           ...user,
@@ -43,6 +42,4 @@ export default async function handler(
   } catch (error) {
     res.status(500).json(error);
   }
-
-  console.log("end request");
 }

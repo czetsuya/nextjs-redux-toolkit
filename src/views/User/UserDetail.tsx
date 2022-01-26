@@ -1,5 +1,5 @@
 import React, {useState} from 'react';
-import {Alert, Box, Button, Container, Grid, Link, Skeleton, TextField, Typography} from "@mui/material";
+import {Alert, Box, Button, Container, Grid, TextField, Typography} from "@mui/material";
 import {useRouter} from "next/router";
 import {useDispatch} from "react-redux";
 import * as yup from 'yup';
@@ -12,6 +12,7 @@ import Footer from "../../components/Footer/Footer";
 import {useCreateUserMutation, useGetUserQuery, useUpdateUserMutation} from "../../services/UserService";
 import {UserPayload} from "../../services/types/UserPayload";
 import moment from "moment";
+import {AppProps} from "next/app";
 
 const validationSchema = yup.object({
   email: yup
@@ -35,13 +36,14 @@ const INITIAL_USER = {
   email: ''
 }
 
-const UserDetail: NextPage = () => {
+const UserDetail: NextPage = (props: AppProps) => {
 
   const router = useRouter();
   const dispatch = useDispatch();
   const [birthDate, setBirthDate] = useState(null);
   const [pageError, setPageError] = useState(null);
   const {id}: { id: string } = router.query;
+  const {toggleEditDrawer} = props;
 
   const {
     data: user,
@@ -49,10 +51,7 @@ const UserDetail: NextPage = () => {
   } = useGetUserQuery(id, {skip: !id || isNaN(id)});
 
   const [createUser, {
-    isLoading: isUserCreating,
-    isSuccess: isUserCreated,
-    isError: isUserCreationKo,
-    error: userCreationKo
+    isLoading: isUserCreating
   }] = useCreateUserMutation();
   const [updateUser, {isLoading: isUserUpdating}] = useUpdateUserMutation();
 
@@ -72,12 +71,26 @@ const UserDetail: NextPage = () => {
       } else {
         await createUser(newValues).unwrap();
       }
+      toggleEditDrawer(false);
+
     } catch (error) {
       setPageError(error);
     }
   }
 
   const renderForm = () => {
+
+    if (user && user !== null) {
+      console.log('setFormValues=', user);
+      setBirthDate(moment(user.birthDate));
+
+      formik.setValues({
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email
+      });
+    }
+
     return (
         <Container maxWidth={"sm"}>
           {pageError && <Alert severity="error">{pageError}</Alert>}
@@ -175,11 +188,9 @@ const UserDetail: NextPage = () => {
                     </Button>
                   </Grid>
                   <Grid item>
-                    <Link href="/users">
-                      <Button size="large" variant="contained" color="secondary">
-                        Cancel
-                      </Button>
-                    </Link>
+                    <Button size="large" variant="contained" color="secondary" onClick={toggleEditDrawer(false)}>
+                      Cancel
+                    </Button>
                   </Grid>
                 </Grid>
               </Grid>
@@ -195,29 +206,6 @@ const UserDetail: NextPage = () => {
     validationSchema: validationSchema,
     onSubmit
   });
-
-  if (user && user !== null) {
-    console.log('setFormValues=', user);
-    setBirthDate(moment(user.birthDate));
-
-    formik.setValues({
-      firstName: user.firstName,
-      lastName: user.lastName,
-      email: user.email
-    });
-  }
-
-  if (isUserCreated) {
-    router.push("/users");
-  }
-
-  if (isUserCreationKo) {
-    return <div>{userCreationKo}</div>
-  }
-
-  if (isUserCreating || isUserUpdating) {
-    return <Skeleton></Skeleton>
-  }
 
   return renderForm();
 }
