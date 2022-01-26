@@ -25,7 +25,7 @@ export default async function handler(
     });
     res.status(200).json(result);
 
-  } else if (req.method === 'PUT') {
+  } else if (req.method === 'PATCH') {
     const {id}: { id: string } = req.query;
     const user: UserPayload = req.body;
     if (!!user.birthDate) {

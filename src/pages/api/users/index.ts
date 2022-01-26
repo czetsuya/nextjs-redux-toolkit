@@ -8,8 +8,7 @@ export default async function handler(
     res: NextApiResponse<Partial<UserPayload> | UserPayload[]>
 ) {
 
-  console.log('req params', req.query);
-  console.log('req body', req.body);
+  console.log('start request: req params', req.query, req.body);
 
   const prisma = new PrismaClient();
 
@@ -44,4 +43,6 @@ export default async function handler(
   } catch (error) {
     res.status(500).json(error);
   }
+
+  console.log("end request");
 }

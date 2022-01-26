@@ -1,5 +1,5 @@
-import React from 'react';
-import {Alert, Box, Button, Container, Grid, Link, TextField, Typography} from "@mui/material";
+import React, {useState} from 'react';
+import {Alert, Box, Button, Container, Grid, Link, Skeleton, TextField, Typography} from "@mui/material";
 import {useRouter} from "next/router";
 import {useDispatch} from "react-redux";
 import * as yup from 'yup';
@@ -9,9 +9,9 @@ import LocalizationProvider from '@mui/lab/LocalizationProvider';
 import {DatePicker} from "@mui/lab";
 import {NextPage} from "next";
 import Footer from "../../components/Footer/Footer";
-import {useCreateUserMutation, useGetUserQuery} from "../../services/UserService";
+import {useCreateUserMutation, useGetUserQuery, useUpdateUserMutation} from "../../services/UserService";
 import {UserPayload} from "../../services/types/UserPayload";
-import {useParams} from 'react-router-dom';
+import moment from "moment";
 
 const validationSchema = yup.object({
   email: yup
@@ -39,10 +39,23 @@ const UserDetail: NextPage = () => {
 
   const router = useRouter();
   const dispatch = useDispatch();
-  const [birthDate, setBirthDate] = React.useState(null);
-  const {id} = useParams<{ id: any }>();
-  const {data: user, isLoading} = useGetUserQuery(id, {skip: !id || isNaN(id)});
-  const [createUser, {isLoading: isUserCreating, isSuccess: isUserCreated}] = useCreateUserMutation();
+  const [birthDate, setBirthDate] = useState(null);
+  const [pageError, setPageError] = useState(null);
+  const {id}: { id: string } = router.query;
+
+  const {
+    data: user,
+    isLoading: isUserFetching
+  } = useGetUserQuery(id, {skip: !id || isNaN(id)});
+
+  const [createUser, {
+    isLoading: isUserCreating,
+    isSuccess: isUserCreated,
+    isError: isUserCreationKo,
+    error: userCreationKo
+  }] = useCreateUserMutation();
+  const [updateUser, {isLoading: isUserUpdating}] = useUpdateUserMutation();
+
 
   const onSubmit = async (values: UserPayload) => {
 
@@ -51,24 +64,24 @@ const UserDetail: NextPage = () => {
       birthDate: birthDate.toISOString()
     }
 
-    if (user && user.id) {
-      newValues.id = user.id;
+    try {
+      if (user && user.id) {
+        newValues.id = user.id;
+        await updateUser(newValues).unwrap();
 
-    } else {
-      console.log("saving user", newValues);
-      try {
+      } else {
         await createUser(newValues).unwrap();
-        console.log('fulfilled', newValues)
-      } catch (error) {
-        console.error('rejected', error);
       }
+    } catch (error) {
+      setPageError(error);
     }
   }
 
   const renderForm = () => {
     return (
         <Container maxWidth={"sm"}>
-          <Alert severity="error"></Alert>
+          {pageError && <Alert severity="error">{pageError}</Alert>}
+
           <Box marginBottom={4}>
             <Typography
                 sx={{
@@ -183,8 +196,27 @@ const UserDetail: NextPage = () => {
     onSubmit
   });
 
+  if (user && user !== null) {
+    console.log('setFormValues=', user);
+    setBirthDate(moment(user.birthDate));
+
+    formik.setValues({
+      firstName: user.firstName,
+      lastName: user.lastName,
+      email: user.email
+    });
+  }
+
   if (isUserCreated) {
     router.push("/users");
+  }
+
+  if (isUserCreationKo) {
+    return <div>{userCreationKo}</div>
+  }
+
+  if (isUserCreating || isUserUpdating) {
+    return <Skeleton></Skeleton>
   }
 
   return renderForm();

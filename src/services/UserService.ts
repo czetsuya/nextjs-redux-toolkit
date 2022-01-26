@@ -21,10 +21,10 @@ export const UsersService = BaseService.injectEndpoints({
       }),
       invalidatesTags: [{type: "User", id: "LIST"}]
     }),
-    updateUser: build.mutation<UserPayload, Partial<UserPayload>>({
+    updateUser: build.mutation<UserPayload, Pick<UserPayload, 'id'> & Partial<UserPayload>>({
       query: ({id, ...body}) => ({
         url: `/users/${id}`,
-        method: 'PUT',
+        method: 'PATCH',
         body
       }),
       invalidatesTags: [{type: "User", id: "LIST"}]
@@ -42,5 +42,5 @@ export const UsersService = BaseService.injectEndpoints({
 
 export const {
   useGetUsersQuery, useGetUserQuery,
-  useCreateUserMutation, useDeleteUserMutation
+  useCreateUserMutation, useDeleteUserMutation, useUpdateUserMutation
 } = UsersService;
