@@ -31,7 +31,7 @@ import {NextPage} from "next";
 import {useDeleteUserMutation, useGetUsersQuery} from "../../services/UserService";
 import Footer from "../../components/Footer/Footer";
 import UserDetail from "./components/UserDetail";
-
+import {UserPayload} from "../../services/types/UserPayload";
 
 const EMPTY_DIALOG = {
   open: false,
@@ -56,7 +56,8 @@ const Users: NextPage = () => {
   const [limit, setLimit] = useState(10);
   const [dialog, setDialog] = useState(EMPTY_DIALOG);
   const [alert, setAlert] = useState(EMPTY_ALERT);
-  const {data, error, isLoading, isSuccess, isFetching, isError} = useGetUsersQuery(1);
+  const [userIdState, setUserIdState] = useState<number | null>(null);
+  const {data, error, isLoading, isSuccess, isFetching, isError} = useGetUsersQuery();
   const [deleteUser, {data: deletedUser, isLoading: isDeleting, isSuccess: isDeleted}] = useDeleteUserMutation();
   const drawerBleeding = 56;
   const [openDrawer, setOpenDrawer] = React.useState(false);
@@ -64,14 +65,14 @@ const Users: NextPage = () => {
   const handleDeleteUser = (userId: number) => async () => {
     try {
       await deleteUser(userId).unwrap();
-
-    } catch (error) {
-
-    } finally {
       setAlert({
         open: true,
         text: `Successfully deleted user: ${userId}`,
       });
+      resetDeleteDialog();
+
+    } catch (error) {
+
     }
   };
 
@@ -94,15 +95,15 @@ const Users: NextPage = () => {
   }
 
   const editUser = (newOpen: boolean, userId: number) => () => {
+    setUserIdState(userId);
     setOpenDrawer(newOpen);
   };
 
   const toggleEditDrawer = (newOpen: boolean) => () => {
-    console.log('toggle', newOpen);
     setOpenDrawer(newOpen);
   };
 
-  const renderTable = (users, count: number) => {
+  const renderTable = (users: UserPayload[], count: number) => {
     const hasUsers = count > 0;
 
     return (
@@ -170,13 +171,6 @@ const Users: NextPage = () => {
         </TableContainer>
     );
   }
-
-  // if (isDeleted) {
-  //   setAlert({
-  //     open: true,
-  //     text: `Successfully deleted user: ${deletedUser.id}`,
-  //   });
-  // }
 
   if (isLoading) {
     return (

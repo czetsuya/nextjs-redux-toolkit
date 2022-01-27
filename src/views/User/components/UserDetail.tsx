@@ -37,22 +37,21 @@ const INITIAL_USER = {
 }
 
 type UserDetailProps = {
-  toggleEditDrawer: () => void
+  toggleEditDrawer: () => void,
+  userId: number
 }
 
-const UserDetail: NextPage = (props: AppProps<UserDetailProps>) => {
+const UserDetail: NextPage = ({toggleEditDrawer, userId}: AppProps<UserDetailProps>) => {
 
   const router = useRouter();
   const dispatch = useDispatch();
   const [birthDate, setBirthDate] = useState(null);
   const [pageError, setPageError] = useState(null);
-  const {id}: { id: string } = router.query;
-  const {toggleEditDrawer} = props;
 
   const {
     data: user,
     isLoading: isUserFetching
-  } = useGetUserQuery(id, {skip: !id || isNaN(id)});
+  } = useGetUserQuery(userId, {skip: !userId || isNaN(userId)});
 
   const [createUser, {
     isLoading: isUserCreating,
@@ -60,10 +59,8 @@ const UserDetail: NextPage = (props: AppProps<UserDetailProps>) => {
   }] = useCreateUserMutation();
   const [updateUser, {isLoading: isUserUpdating}] = useUpdateUserMutation();
 
-
   const onSubmit = async (values: UserPayload) => {
 
-    console.log('submit')
     let newValues = {
       ...values,
       birthDate: birthDate.toISOString()
@@ -77,20 +74,18 @@ const UserDetail: NextPage = (props: AppProps<UserDetailProps>) => {
       } else {
         await createUser(newValues).unwrap();
       }
-      console.log('fin')
+
     } catch (error) {
       setPageError(error);
 
     } finally {
-      console.log("finally");
-      toggleEditDrawer(false);
+      toggleEditDrawer(false)();
     }
   }
 
   const renderForm = () => {
 
     if (user && user !== null) {
-      console.log('setFormValues=', user);
       setBirthDate(moment(user.birthDate));
 
       formik.setValues({
@@ -219,11 +214,6 @@ const UserDetail: NextPage = (props: AppProps<UserDetailProps>) => {
     validationSchema: validationSchema,
     onSubmit
   });
-
-  console.log('isUserCreated', isUserCreated);
-  if (isUserCreated) {
-    toggleEditDrawer(false);
-  }
 
   return renderForm();
 }
