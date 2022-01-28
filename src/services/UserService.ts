@@ -1,27 +1,28 @@
 // Need to use the React-specific entry point to import createApi
 import {BaseService} from "./BaseService";
-import {UserPayload} from "./types/UserPayload";
+import {UserType} from "./types/UserType";
+import {createSlice} from "@reduxjs/toolkit";
 
 export const UsersService = BaseService.injectEndpoints({
   endpoints: (build) => ({
-    getUsers: build.query<UserPayload[], void>({
+    getUsers: build.query<UserType[], void>({
       query: () => '/users',
       providesTags: [{type: "User", id: "LIST"}]
     }),
-    getUser: build.query<UserPayload, number>({
+    getUser: build.query<UserType, number>({
       query: (id) => ({
         url: `/users/${id}`,
       })
     }),
-    createUser: build.mutation<UserPayload, UserPayload>({
-      query: (body: UserPayload) => ({
+    createUser: build.mutation<UserType, UserType>({
+      query: (body: UserType) => ({
         url: `/users`,
         method: 'POST',
         body
       }),
       invalidatesTags: [{type: "User", id: "LIST"}]
     }),
-    updateUser: build.mutation<UserPayload, Pick<UserPayload, 'id'> & Partial<UserPayload>>({
+    updateUser: build.mutation<UserType, Pick<UserType, 'id'> & Partial<UserType>>({
       query: ({id, ...body}) => ({
         url: `/users/${id}`,
         method: 'PATCH',

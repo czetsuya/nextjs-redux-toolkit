@@ -1,4 +1,4 @@
-export interface UserPayload {
+export interface UserType {
   id?: number,
   firstName?: string,
   lastName?: string,

@@ -11,7 +11,6 @@ import {
   DialogContent,
   DialogContentText,
   DialogTitle,
-  Skeleton,
   Snackbar,
   SwipeableDrawer,
   Table,
@@ -31,7 +30,8 @@ import {NextPage} from "next";
 import {useDeleteUserMutation, useGetUsersQuery} from "../../services/UserService";
 import Footer from "../../components/Footer/Footer";
 import UserDetail from "./components/UserDetail";
-import {UserPayload} from "../../services/types/UserPayload";
+import {UserType} from "../../services/types/UserType";
+import {setUser} from "../../services/slices/UserSlice";
 
 const EMPTY_DIALOG = {
   open: false,
@@ -56,9 +56,22 @@ const Users: NextPage = () => {
   const [limit, setLimit] = useState(10);
   const [dialog, setDialog] = useState(EMPTY_DIALOG);
   const [alert, setAlert] = useState(EMPTY_ALERT);
-  const [userIdState, setUserIdState] = useState<number | null>(null);
-  const {data, error, isLoading, isSuccess, isFetching, isError} = useGetUsersQuery();
-  const [deleteUser, {data: deletedUser, isLoading: isDeleting, isSuccess: isDeleted}] = useDeleteUserMutation();
+
+  const {
+    data,
+    error,
+    isLoading: isUsersLoading,
+    isSuccess: isUsersQueried,
+    isFetching: isUsersFetching,
+    isError: isUsersError
+  } = useGetUsersQuery();
+
+  const [deleteUser, {
+    data: deletedUser,
+    isLoading: isUserDeleting,
+    isSuccess: isUserDeleted
+  }] = useDeleteUserMutation();
+
   const drawerBleeding = 56;
   const [openDrawer, setOpenDrawer] = React.useState(false);
 
@@ -94,130 +107,83 @@ const Users: NextPage = () => {
     setAlert(EMPTY_ALERT);
   }
 
-  const editUser = (newOpen: boolean, userId: number) => () => {
-    setUserIdState(userId);
-    setOpenDrawer(newOpen);
+  const editUser = (user: UserType) => () => {
+
+    setOpenDrawer(true);
+    dispatch(setUser(user));
   };
 
   const toggleEditDrawer = (newOpen: boolean) => () => {
     setOpenDrawer(newOpen);
   };
 
-  const renderTable = (users: UserPayload[], count: number) => {
+  const renderTable = (users: UserType[], count: number) => {
     const hasUsers = count > 0;
 
     return (
-        <TableContainer>
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell colSpan={6} align="right">
-                  <Button variant="outlined" color="primary" onClick={toggleEditDrawer(true)}>
-                    <PersonAdd/>
-                  </Button>
-                </TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell>Id</TableCell>
-                <TableCell>First name</TableCell>
-                <TableCell>Last name</TableCell>
-                <TableCell>Email</TableCell>
-                <TableCell>Birth date</TableCell>
-                <TableCell></TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {hasUsers ? (
-                  users.map((user) => (
-                      <TableRow key={user.id}>
-                        <TableCell>{user.id}</TableCell>
-                        <TableCell>{user.firstName}</TableCell>
-                        <TableCell>{user.lastName}</TableCell>
-                        <TableCell>{user.email}</TableCell>
-                        <TableCell>
-                          {moment.utc(user.birthDate).format('MM-DD-YYYY')}
-                        </TableCell>
-                        <TableCell sx={{textAlign: "right"}}>
-                          <ButtonGroup>
-                            <Button onClick={editUser(true, user.id)}>
-                              <Edit/>
-                            </Button>
-                            <Button onClick={openDeleteDialog(user.id)}>
-                              {<Delete/>}
-                            </Button>
-                          </ButtonGroup>
-                        </TableCell>
-                      </TableRow>
-                  ))
-              ) : (
-                  <TableRow>
-                    <TableCell colSpan={6}>No users found.</TableCell>
-                  </TableRow>
-              )}
-            </TableBody>
-            <TableFooter>
-              <TableRow>
-                {/*<TablePagination*/}
-                {/*    component={TableCell}*/}
-                {/*    count={count}*/}
-                {/*    page={offset}*/}
-                {/*    rowsPerPage={limit}*/}
-                {/*    onChangePage={handleChangePage}*/}
-                {/*    onChangeRowsPerPage={handleChangeRowsPerPage}*/}
-                {/*/>*/}
-              </TableRow>
-            </TableFooter>
-          </Table>
-        </TableContainer>
-    );
-  }
-
-  if (isLoading) {
-    return (
-        <Box sx={{display: 'flex'}}>
-          <CircularProgress/>
-        </Box>
-    );
-  }
-
-  if (isFetching) {
-    return <Skeleton></Skeleton>
-  }
-
-  if (isSuccess) {
-    const {users, count} = data;
-    return (
-        <Container maxWidth={"md"} fixed>
-          {isError && <Alert severity="error">{error}</Alert>}
-          {renderTable(users, count)}
-          <Footer></Footer>
-          <Dialog
-              open={dialog.open}
-              onClose={dialog.onCancel}
-              aria-labelledby="alert-dialog-title"
-              aria-describedby="alert-dialog-description"
-          >
-            <DialogTitle id="alert-dialog-title">
-              {dialog.title}
-            </DialogTitle>
-            <DialogContent>
-              <DialogContentText id="alert-dialog-description">
-                {dialog.text}
-              </DialogContentText>
-            </DialogContent>
-            <DialogActions>
-              <Button onClick={dialog.onCancel}>Disagree</Button>
-              <Button onClick={dialog.onConfirm} autoFocus>
-                Agree
-              </Button>
-            </DialogActions>
-          </Dialog>
-          <Snackbar
-              open={alert.open}
-              autoHideDuration={6000}
-              onClose={resetAlert}
-              message={alert.text}
-          />
+        <React.Fragment>
+          <TableContainer>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell colSpan={6} align="right">
+                    <Button variant="outlined" color="primary" onClick={toggleEditDrawer(true)}>
+                      <PersonAdd/>
+                    </Button>
+                  </TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell>Id</TableCell>
+                  <TableCell>First name</TableCell>
+                  <TableCell>Last name</TableCell>
+                  <TableCell>Email</TableCell>
+                  <TableCell>Birth date</TableCell>
+                  <TableCell></TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {hasUsers ? (
+                    users.map((user) => (
+                        <TableRow key={user.id}>
+                          <TableCell>{user.id}</TableCell>
+                          <TableCell>{user.firstName}</TableCell>
+                          <TableCell>{user.lastName}</TableCell>
+                          <TableCell>{user.email}</TableCell>
+                          <TableCell>
+                            {moment.utc(user.birthDate).format('MM-DD-YYYY')}
+                          </TableCell>
+                          <TableCell sx={{textAlign: "right"}}>
+                            <ButtonGroup>
+                              <Button onClick={editUser(user)}>
+                                <Edit/>
+                              </Button>
+                              <Button onClick={openDeleteDialog(user.id)}>
+                                {<Delete/>}
+                              </Button>
+                            </ButtonGroup>
+                          </TableCell>
+                        </TableRow>
+                    ))
+                ) : (
+                    <TableRow>
+                      <TableCell colSpan={6}>No users found.</TableCell>
+                    </TableRow>
+                )}
+              </TableBody>
+              <TableFooter>
+                <TableRow>
+                  {/*<TablePagination*/}
+                  {/*    component={TableCell}*/}
+                  {/*    count={count}*/}
+                  {/*    page={offset}*/}
+                  {/*    rowsPerPage={limit}*/}
+                  {/*    onChangePage={handleChangePage}*/}
+                  {/*    onChangeRowsPerPage={handleChangeRowsPerPage}*/}
+                  {/*/>*/}
+                </TableRow>
+              </TableFooter>
+            </Table>
+          </TableContainer>
           <SwipeableDrawer
               anchor="bottom"
               open={openDrawer}
@@ -231,11 +197,60 @@ const Users: NextPage = () => {
           >
             <UserDetail toggleEditDrawer={toggleEditDrawer}></UserDetail>
           </SwipeableDrawer>
-        </Container>
+        </React.Fragment>
     );
   }
 
-  return <div>Invalid State</div>;
+  const renderBody = () => {
+    if (isUsersQueried) {
+      const {users, count} = data;
+
+      return (isUsersFetching || isUsersLoading) ?
+          <Box sx={{display: 'flex'}}>
+            <CircularProgress/>
+          </Box> :
+          renderTable(users, count)
+    }
+  }
+
+  const renderError = () => {
+    return isUsersError && <Alert severity="error">{error}</Alert>;
+  }
+
+  return (
+      <Container maxWidth={"md"} fixed>
+        {renderError()}
+        {renderBody()}
+        <Footer></Footer>
+        <Dialog
+            open={dialog.open}
+            onClose={dialog.onCancel}
+            aria-labelledby="alert-dialog-title"
+            aria-describedby="alert-dialog-description"
+        >
+          <DialogTitle id="alert-dialog-title">
+            {dialog.title}
+          </DialogTitle>
+          <DialogContent>
+            <DialogContentText id="alert-dialog-description">
+              {dialog.text}
+            </DialogContentText>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={dialog.onCancel}>Disagree</Button>
+            <Button onClick={dialog.onConfirm} autoFocus>
+              Agree
+            </Button>
+          </DialogActions>
+        </Dialog>
+        <Snackbar
+            open={alert.open}
+            autoHideDuration={6000}
+            onClose={resetAlert}
+            message={alert.text}
+        />
+      </Container>
+  );
 }
 
 export default Users;

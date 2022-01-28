@@ -1,10 +1,12 @@
 import {configureStore} from '@reduxjs/toolkit';
 import {UsersService} from "./UserService";
+import {UserSlice} from "./slices/UserSlice";
 
 export function makeStore() {
   return configureStore({
     reducer: {
-      [UsersService.reducerPath]: UsersService.reducer
+      [UsersService.reducerPath]: UsersService.reducer,
+      user: UserSlice.reducer
     },
     middleware: (getDefaultMiddleware) =>
         getDefaultMiddleware().concat(

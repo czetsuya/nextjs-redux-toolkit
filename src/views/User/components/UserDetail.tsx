@@ -1,7 +1,7 @@
 import React, {useState} from 'react';
 import {Alert, Box, Button, Container, Grid, TextField, Typography} from "@mui/material";
 import {useRouter} from "next/router";
-import {useDispatch} from "react-redux";
+import {useDispatch, useSelector} from "react-redux";
 import * as yup from 'yup';
 import {useFormik} from "formik";
 import AdapterMoment from '@mui/lab/AdapterMoment';
@@ -9,10 +9,11 @@ import LocalizationProvider from '@mui/lab/LocalizationProvider';
 import {DatePicker} from "@mui/lab";
 import {NextPage} from "next";
 import Footer from "../../../components/Footer/Footer";
-import {useCreateUserMutation, useGetUserQuery, useUpdateUserMutation} from "../../../services/UserService";
-import {UserPayload} from "../../../services/types/UserPayload";
+import {useCreateUserMutation, useUpdateUserMutation} from "../../../services/UserService";
+import {UserType} from "../../../services/types/UserType";
 import moment from "moment";
 import {AppProps} from "next/app";
+import {selectUser} from "../../../services/slices/UserSlice";
 
 const validationSchema = yup.object({
   email: yup
@@ -36,30 +37,26 @@ const INITIAL_USER = {
   email: ''
 }
 
-type UserDetailProps = {
-  toggleEditDrawer: () => void,
-  userId: number
-}
+const UserDetail: NextPage = ({toggleEditDrawer}: AppProps) => {
 
-const UserDetail: NextPage = ({toggleEditDrawer, userId}: AppProps<UserDetailProps>) => {
-
-  const router = useRouter();
-  const dispatch = useDispatch();
   const [birthDate, setBirthDate] = useState(null);
   const [pageError, setPageError] = useState(null);
-
-  const {
-    data: user,
-    isLoading: isUserFetching
-  } = useGetUserQuery(userId, {skip: !userId || isNaN(userId)});
+  const user = useSelector(selectUser);
 
   const [createUser, {
     isLoading: isUserCreating,
     isSuccess: isUserCreated
   }] = useCreateUserMutation();
+
+  // you can get the detailed user if really needed
+  // const {
+  //   data: user,
+  //   isLoading: isUserLoading
+  // } = useGetUserQuery(user.id);
+
   const [updateUser, {isLoading: isUserUpdating}] = useUpdateUserMutation();
 
-  const onSubmit = async (values: UserPayload) => {
+  const onSubmit = async (values: UserType) => {
 
     let newValues = {
       ...values,
@@ -86,13 +83,13 @@ const UserDetail: NextPage = ({toggleEditDrawer, userId}: AppProps<UserDetailPro
   const renderForm = () => {
 
     if (user && user !== null) {
-      setBirthDate(moment(user.birthDate));
+      // setBirthDate(moment(user.birthDate));
 
-      formik.setValues({
-        firstName: user.firstName,
-        lastName: user.lastName,
-        email: user.email
-      });
+      // formik.setValues({
+      //   firstName: user.firstName,
+      //   lastName: user.lastName,
+      //   email: user.email
+      // });
     }
 
     return (

@@ -1,11 +1,11 @@
 import {PrismaClient} from '@prisma/client';
 import moment from 'moment';
 import {NextApiRequest, NextApiResponse} from "next";
-import {UserPayload} from "../../../services/types/UserPayload";
+import {UserType} from "../../../services/types/UserType";
 
 export default async function handler(
     req: NextApiRequest,
-    res: NextApiResponse<Partial<UserPayload>>
+    res: NextApiResponse<Partial<UserType>>
 ) {
   console.log('start request: req params', req.query, req.body);
 
@@ -27,7 +27,7 @@ export default async function handler(
 
   } else if (req.method === 'PATCH') {
     const {id}: { id: string } = req.query;
-    const user: UserPayload = req.body;
+    const user: UserType = req.body;
     if (!!user.birthDate) {
       user.birthDate = moment.utc(user.birthDate).toDate();
     }
