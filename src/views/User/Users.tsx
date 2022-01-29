@@ -31,7 +31,7 @@ import {useDeleteUserMutation, useGetUsersQuery} from "../../services/UserServic
 import Footer from "../../components/Footer/Footer";
 import UserDetail from "./components/UserDetail";
 import {UserType} from "../../services/types/UserType";
-import {setUser} from "../../services/slices/UserSlice";
+import {clearUser, setUser} from "../../services/slices/UserSlice";
 
 const EMPTY_DIALOG = {
   open: false,
@@ -114,6 +114,10 @@ const Users: NextPage = () => {
   };
 
   const toggleEditDrawer = (newOpen: boolean) => () => {
+
+    if (!newOpen) {
+      dispatch(clearUser());
+    }
     setOpenDrawer(newOpen);
   };
 
