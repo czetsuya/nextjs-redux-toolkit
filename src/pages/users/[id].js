@@ -2,7 +2,7 @@ import {UserDetail} from "views/User";
 
 const UserDetailPage = () => {
   return (
-      <UserDetail></UserDetail>
+      <div>hello</div>
   );
 }
 

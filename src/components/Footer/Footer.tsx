@@ -5,7 +5,7 @@ import {NextPage} from "next";
 const Footer: NextPage = () => {
 
   return (
-      <Container>
+      <Box>
         <Box>
           <Typography>
             If you would like to support these tutorials I have a Patreon account
@@ -33,7 +33,7 @@ const Footer: NextPage = () => {
             Czetsuya Tech
           </a>
         </footer>
-      </Container>
+      </Box>
   );
 }
 

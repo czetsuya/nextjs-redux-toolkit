@@ -1,5 +1,6 @@
 import React, {useState} from 'react';
 import {
+  Alert,
   Box,
   Button,
   ButtonGroup,
@@ -10,9 +11,8 @@ import {
   DialogContent,
   DialogContentText,
   DialogTitle,
-  Link,
-  Skeleton,
   Snackbar,
+  SwipeableDrawer,
   Table,
   TableBody,
   TableCell,
@@ -27,9 +27,11 @@ import {useAppDispatch} from 'services/hooks';
 
 import {useRouter} from "next/router";
 import {NextPage} from "next";
-import Footer from "../../components/Footer/Footer";
 import {useDeleteUserMutation, useGetUsersQuery} from "../../services/UserService";
-
+import Footer from "../../components/Footer/Footer";
+import UserDetail from "./components/UserDetail";
+import {UserType} from "../../services/types/UserType";
+import {setUser} from "../../services/slices/UserSlice";
 
 const EMPTY_DIALOG = {
   open: false,
@@ -54,16 +56,37 @@ const Users: NextPage = () => {
   const [limit, setLimit] = useState(10);
   const [dialog, setDialog] = useState(EMPTY_DIALOG);
   const [alert, setAlert] = useState(EMPTY_ALERT);
-  const {data, error, isLoading, isSuccess, isFetching, isError} = useGetUsersQuery(1);
-  const [deleteUser, {isLoading: isDeleting, isSuccess: isDeleted}] = useDeleteUserMutation();
 
-  const editUser = (userId: number) => () => {
-    router.push(`/users/${userId}`);
-  }
+  const {
+    data,
+    error,
+    isLoading: isUsersLoading,
+    isSuccess: isUsersQueried,
+    isFetching: isUsersFetching,
+    isError: isUsersError
+  } = useGetUsersQuery();
 
-  const handleDeleteUser = (userId: number) => () => {
-    deleteUser(userId);
-    resetDeleteDialog();
+  const [deleteUser, {
+    data: deletedUser,
+    isLoading: isUserDeleting,
+    isSuccess: isUserDeleted
+  }] = useDeleteUserMutation();
+
+  const drawerBleeding = 56;
+  const [openDrawer, setOpenDrawer] = React.useState(false);
+
+  const handleDeleteUser = (userId: number) => async () => {
+    try {
+      await deleteUser(userId).unwrap();
+      setAlert({
+        open: true,
+        text: `Successfully deleted user: ${userId}`,
+      });
+      resetDeleteDialog();
+
+    } catch (error) {
+      console.log(`Error: Failed deleting user with id ${userId}`);
+    }
   };
 
   const resetDeleteDialog = () => {
@@ -81,24 +104,32 @@ const Users: NextPage = () => {
   }
 
   const resetAlert = () => {
-
+    setAlert(EMPTY_ALERT);
   }
 
-  const renderTable = (users, count: number) => {
+  const editUser = (user: UserType) => () => {
+
+    setOpenDrawer(true);
+    dispatch(setUser(user));
+  };
+
+  const toggleEditDrawer = (newOpen: boolean) => () => {
+    setOpenDrawer(newOpen);
+  };
+
+  const renderTable = (users: UserType[], count: number) => {
     const hasUsers = count > 0;
 
     return (
-        <Container maxWidth={"md"} fixed>
+        <React.Fragment>
           <TableContainer>
             <Table>
               <TableHead>
                 <TableRow>
                   <TableCell colSpan={6} align="right">
-                    <Link href="/users/new">
-                      <Button variant="outlined" color="primary">
-                        <PersonAdd/>
-                      </Button>
-                    </Link>
+                    <Button variant="outlined" color="primary" onClick={toggleEditDrawer(true)}>
+                      <PersonAdd/>
+                    </Button>
                   </TableCell>
                 </TableRow>
                 <TableRow>
@@ -123,7 +154,7 @@ const Users: NextPage = () => {
                           </TableCell>
                           <TableCell sx={{textAlign: "right"}}>
                             <ButtonGroup>
-                              <Button onClick={editUser(user.id)}>
+                              <Button onClick={editUser(user)}>
                                 <Edit/>
                               </Button>
                               <Button onClick={openDeleteDialog(user.id)}>
@@ -153,60 +184,73 @@ const Users: NextPage = () => {
               </TableFooter>
             </Table>
           </TableContainer>
-          <Footer></Footer>
-          <Dialog
-              open={dialog.open}
-              onClose={dialog.onCancel}
-              aria-labelledby="alert-dialog-title"
-              aria-describedby="alert-dialog-description"
+          <SwipeableDrawer
+              anchor="bottom"
+              open={openDrawer}
+              onClose={toggleEditDrawer(false)}
+              onOpen={toggleEditDrawer(true)}
+              swipeAreaWidth={drawerBleeding}
+              disableSwipeToOpen={false}
+              ModalProps={{
+                keepMounted: true,
+              }}
           >
-            <DialogTitle id="alert-dialog-title">
-              {dialog.title}
-            </DialogTitle>
-            <DialogContent>
-              <DialogContentText id="alert-dialog-description">
-                {dialog.text}
-              </DialogContentText>
-            </DialogContent>
-            <DialogActions>
-              <Button onClick={dialog.onCancel}>Disagree</Button>
-              <Button onClick={dialog.onConfirm} autoFocus>
-                Agree
-              </Button>
-            </DialogActions>
-          </Dialog>
-          <Snackbar
-              open={alert.open}
-              autoHideDuration={6000}
-              onClose={resetAlert}
-              message={alert.text}
-          />
-        </Container>
+            <UserDetail toggleEditDrawer={toggleEditDrawer}></UserDetail>
+          </SwipeableDrawer>
+        </React.Fragment>
     );
   }
 
-  if (isLoading) {
-    return (
-        <Box sx={{display: 'flex'}}>
-          <CircularProgress/>
-        </Box>
-    );
+  const renderBody = () => {
+    if (isUsersQueried) {
+      const {users, count} = data;
+
+      return (isUsersFetching || isUsersLoading) ?
+          <Box sx={{display: 'flex'}}>
+            <CircularProgress/>
+          </Box> :
+          renderTable(users, count)
+    }
   }
 
-  if (isFetching) {
-    return <Skeleton></Skeleton>
+  const renderError = () => {
+    return isUsersError && <Alert severity="error">{error}</Alert>;
   }
 
-  if (isSuccess) {
-    const {users, count} = data;
-    return renderTable(users, count);
-  }
-
-  if (isError) {
-    return <div>Error: {error}</div>
-  }
-
-  return <div>Invalid State</div>;
+  return (
+      <Container maxWidth={"md"} fixed>
+        {renderError()}
+        {renderBody()}
+        <Footer></Footer>
+        <Dialog
+            open={dialog.open}
+            onClose={dialog.onCancel}
+            aria-labelledby="alert-dialog-title"
+            aria-describedby="alert-dialog-description"
+        >
+          <DialogTitle id="alert-dialog-title">
+            {dialog.title}
+          </DialogTitle>
+          <DialogContent>
+            <DialogContentText id="alert-dialog-description">
+              {dialog.text}
+            </DialogContentText>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={dialog.onCancel}>Disagree</Button>
+            <Button onClick={dialog.onConfirm} autoFocus>
+              Agree
+            </Button>
+          </DialogActions>
+        </Dialog>
+        <Snackbar
+            open={alert.open}
+            autoHideDuration={6000}
+            onClose={resetAlert}
+            message={alert.text}
+        />
+      </Container>
+  );
 }
 
 export default Users;
