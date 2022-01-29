@@ -94,6 +94,10 @@ const UserDetail: NextPage = ({toggleEditDrawer}: AppProps) => {
         lastName: user.lastName,
         email: user.email
       });
+
+    } else {
+      setBirthDate(null);
+      formik.resetForm(INITIAL_USER);
     }
   }, [user]);
 
@@ -210,7 +214,7 @@ const UserDetail: NextPage = ({toggleEditDrawer}: AppProps) => {
             </Typography>
           </Box>
         </Box>
-        {user && renderForm()}
+        {renderForm()}
         <Footer></Footer>
       </Container>
   );
