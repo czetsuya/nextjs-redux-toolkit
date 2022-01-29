@@ -5,6 +5,14 @@ This is a template for creating a NextJS application that uses `redux-observable
 We use `redux-devtools-extension` when running in developer mode to log actions and state changes and we
 use `redux-persist` to save state between browser refreshes.
 
+## Tech Stack
+
+- NextTS
+- Formik
+- Redux Toolkit
+- MUI5
+- Yup
+
 ## How to use
 
 To get the User (CRUD example) page working, [prisma](https://www.prisma.io/) must be initialized by running:
