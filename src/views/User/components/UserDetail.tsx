@@ -1,7 +1,6 @@
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {Alert, Box, Button, Container, Grid, TextField, Typography} from "@mui/material";
-import {useRouter} from "next/router";
-import {useDispatch, useSelector} from "react-redux";
+import {useSelector} from "react-redux";
 import * as yup from 'yup';
 import {useFormik} from "formik";
 import AdapterMoment from '@mui/lab/AdapterMoment';
@@ -11,9 +10,9 @@ import {NextPage} from "next";
 import Footer from "../../../components/Footer/Footer";
 import {useCreateUserMutation, useUpdateUserMutation} from "../../../services/UserService";
 import {UserType} from "../../../services/types/UserType";
-import moment from "moment";
 import {AppProps} from "next/app";
 import {selectUser} from "../../../services/slices/UserSlice";
+import moment from "moment";
 
 const validationSchema = yup.object({
   email: yup
@@ -39,6 +38,8 @@ const INITIAL_USER = {
 
 const UserDetail: NextPage = ({toggleEditDrawer}: AppProps) => {
 
+  console.log('user detail')
+
   const [birthDate, setBirthDate] = useState(null);
   const [pageError, setPageError] = useState(null);
   const user = useSelector(selectUser);
@@ -56,7 +57,7 @@ const UserDetail: NextPage = ({toggleEditDrawer}: AppProps) => {
 
   const [updateUser, {isLoading: isUserUpdating}] = useUpdateUserMutation();
 
-  const onSubmit = async (values: UserType) => {
+  const onSubmit = (values: UserType) => {
 
     let newValues = {
       ...values,
@@ -66,10 +67,10 @@ const UserDetail: NextPage = ({toggleEditDrawer}: AppProps) => {
     try {
       if (user && user.id) {
         newValues.id = user.id;
-        await updateUser(newValues).unwrap();
+        updateUser(newValues).unwrap();
 
       } else {
-        await createUser(newValues).unwrap();
+        createUser(newValues).unwrap();
       }
 
     } catch (error) {
@@ -80,139 +81,142 @@ const UserDetail: NextPage = ({toggleEditDrawer}: AppProps) => {
     }
   }
 
-  const renderForm = () => {
-
-    if (user && user !== null) {
-      // setBirthDate(moment(user.birthDate));
-
-      // formik.setValues({
-      //   firstName: user.firstName,
-      //   lastName: user.lastName,
-      //   email: user.email
-      // });
-    }
-
-    return (
-        <Container maxWidth={"md"}>
-          <Box sx={{margin: 2}}>
-            {pageError && <Alert severity="error">{pageError}</Alert>}
-
-            <Box marginBottom={4}>
-              <Typography
-                  sx={{
-                    textTransform: 'uppercase',
-                    fontWeight: 'medium',
-                  }}
-                  gutterBottom
-                  color={'text.secondary'}
-              >
-                Create User
-              </Typography>
-              <Typography color="text.secondary">
-                Enter the details
-              </Typography>
-            </Box>
-            <Box>
-              <form onSubmit={formik.handleSubmit}>
-                <Grid container spacing={4}>
-                  <Grid item xs={12}>
-                    <Typography variant={'subtitle2'} sx={{marginBottom: 2}}>
-                      Enter your email
-                    </Typography>
-                    <TextField
-                        label="Email *"
-                        variant="outlined"
-                        name={'email'}
-                        fullWidth
-                        value={formik.values.email}
-                        onChange={formik.handleChange}
-                        error={formik.touched.email && Boolean(formik.errors.email)}
-                        helperText={formik.touched.email && formik.errors.email}
-                    />
-                  </Grid>
-                  <Grid item xs={12}>
-                    <Typography variant={'subtitle2'} sx={{marginBottom: 2}}>
-                      Enter your firstname
-                    </Typography>
-                    <TextField
-                        label="Firstname *"
-                        variant="outlined"
-                        name={'firstName'}
-                        fullWidth
-                        value={formik.values.firstName}
-                        onChange={formik.handleChange}
-                        error={formik.touched.firstName && Boolean(formik.errors.firstName)}
-                        helperText={formik.touched.firstName && formik.errors.firstName}
-                    />
-                  </Grid>
-                  <Grid item xs={12}>
-                    <Typography variant={'subtitle2'} sx={{marginBottom: 2}}>
-                      Enter your lastName
-                    </Typography>
-                    <TextField
-                        label="Lastname *"
-                        variant="outlined"
-                        name={'lastName'}
-                        fullWidth
-                        value={formik.values.lastName}
-                        onChange={formik.handleChange}
-                        error={formik.touched.lastName && Boolean(formik.errors.lastName)}
-                        helperText={formik.touched.lastName && formik.errors.lastName}
-                    />
-                  </Grid>
-                  <Grid item xs={12}>
-                    <Typography variant={'subtitle2'} sx={{marginBottom: 2}}>
-                      Enter your birthdate
-                    </Typography>
-                    <LocalizationProvider dateAdapter={AdapterMoment}>
-                      <DatePicker
-                          label="Birthdate"
-                          value={birthDate}
-                          onChange={(newValue) => {
-                            setBirthDate(newValue);
-                          }}
-                          renderInput={(params) => <TextField {...params} variant={"outlined"} fullWidth required/>}
-                      />
-                    </LocalizationProvider>
-                  </Grid>
-                  <Grid item xs={12}>
-                    <Typography variant="subtitle2" gutterBottom>
-                      Fields that are marked with * sign are required.
-                    </Typography>
-                    <Grid container spacing={2}>
-                      <Grid item>
-                        <Button
-                            size="large"
-                            variant="contained"
-                            color="primary"
-                            type={"submit"}
-                        >
-                          Save
-                        </Button>
-                      </Grid>
-                      <Grid item>
-                        <Button size="large" variant="contained" color="secondary" onClick={toggleEditDrawer(false)}>
-                          Cancel
-                        </Button>
-                      </Grid>
-                    </Grid>
-                  </Grid>
-                </Grid>
-              </form>
-            </Box>
-            <Footer></Footer>
-          </Box>
-        </Container>
-    );
-  }
-
   const formik = useFormik({
     initialValues: INITIAL_USER,
     validationSchema: validationSchema,
     onSubmit
   });
 
-  return renderForm();
+  useEffect(() => {
+    if (user && user !== null) {
+      console.log(user.birthDate)
+      setBirthDate(moment(user.birthDate));
+
+      formik.setValues({
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email
+      });
+    }
+  }, [user]);
+
+  const renderForm = () => {
+
+    return (
+        <form onSubmit={formik.handleSubmit}>
+          <Grid container spacing={4}>
+            <Grid item xs={12}>
+              <Typography variant={'subtitle2'} sx={{marginBottom: 2}}>
+                Enter your email
+              </Typography>
+              <TextField
+                  label="Email *"
+                  variant="outlined"
+                  name={'email'}
+                  fullWidth
+                  value={formik.values.email}
+                  onChange={formik.handleChange}
+                  error={formik.touched.email && Boolean(formik.errors.email)}
+                  helperText={formik.touched.email && formik.errors.email}
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <Typography variant={'subtitle2'} sx={{marginBottom: 2}}>
+                Enter your firstname
+              </Typography>
+              <TextField
+                  label="Firstname *"
+                  variant="outlined"
+                  name={'firstName'}
+                  fullWidth
+                  value={formik.values.firstName}
+                  onChange={formik.handleChange}
+                  error={formik.touched.firstName && Boolean(formik.errors.firstName)}
+                  helperText={formik.touched.firstName && formik.errors.firstName}
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <Typography variant={'subtitle2'} sx={{marginBottom: 2}}>
+                Enter your lastName
+              </Typography>
+              <TextField
+                  label="Lastname *"
+                  variant="outlined"
+                  name={'lastName'}
+                  fullWidth
+                  value={formik.values.lastName}
+                  onChange={formik.handleChange}
+                  error={formik.touched.lastName && Boolean(formik.errors.lastName)}
+                  helperText={formik.touched.lastName && formik.errors.lastName}
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <Typography variant={'subtitle2'} sx={{marginBottom: 2}}>
+                Enter your birthdate
+              </Typography>
+              <LocalizationProvider dateAdapter={AdapterMoment}>
+                <DatePicker
+                    label="Birthdate"
+                    value={birthDate}
+                    onChange={(newValue) => {
+                      setBirthDate(newValue);
+                    }}
+                    renderInput={(params) => <TextField {...params} variant={"outlined"} fullWidth required/>}
+                />
+              </LocalizationProvider>
+            </Grid>
+            <Grid item xs={12}>
+              <Typography variant="subtitle2" gutterBottom>
+                Fields that are marked with * sign are required.
+              </Typography>
+              <Grid container spacing={2}>
+                <Grid item>
+                  <Button
+                      size="large"
+                      variant="contained"
+                      color="primary"
+                      type={"submit"}
+                  >
+                    Save
+                  </Button>
+                </Grid>
+                <Grid item>
+                  <Button size="large" variant="contained" color="secondary" onClick={toggleEditDrawer(false)}>
+                    Cancel
+                  </Button>
+                </Grid>
+              </Grid>
+            </Grid>
+          </Grid>
+        </form>
+    );
+  }
+
+  return (
+      <Container maxWidth={"md"}>
+        <Box sx={{margin: 2}}>
+          {pageError && <Alert severity="error">{pageError}</Alert>}
+
+          <Box marginBottom={4}>
+            <Typography
+                sx={{
+                  textTransform: 'uppercase',
+                  fontWeight: 'medium',
+                }}
+                gutterBottom
+                color={'text.secondary'}
+            >
+              Create User
+            </Typography>
+            <Typography color="text.secondary">
+              Enter the details
+            </Typography>
+          </Box>
+        </Box>
+        {user && renderForm()}
+        <Footer></Footer>
+      </Container>
+  );
 }
 
 export default UserDetail;

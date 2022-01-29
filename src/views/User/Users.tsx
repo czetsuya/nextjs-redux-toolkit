@@ -50,6 +50,8 @@ const EMPTY_ALERT = {
 
 const Users: NextPage = () => {
 
+  console.log('users')
+
   const router = useRouter();
   const dispatch = useAppDispatch();
   const [offset, setOffset] = useState(0);
@@ -85,7 +87,7 @@ const Users: NextPage = () => {
       resetDeleteDialog();
 
     } catch (error) {
-
+      console.log(`Error: Failed deleting user with id ${userId}`);
     }
   };
 
