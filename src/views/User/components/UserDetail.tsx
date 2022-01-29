@@ -38,8 +38,6 @@ const INITIAL_USER = {
 
 const UserDetail: NextPage = ({toggleEditDrawer}: AppProps) => {
 
-  console.log('user detail')
-
   const [birthDate, setBirthDate] = useState(null);
   const [pageError, setPageError] = useState(null);
   const user = useSelector(selectUser);
@@ -89,7 +87,6 @@ const UserDetail: NextPage = ({toggleEditDrawer}: AppProps) => {
 
   useEffect(() => {
     if (user && user !== null) {
-      console.log(user.birthDate)
       setBirthDate(moment(user.birthDate));
 
       formik.setValues({

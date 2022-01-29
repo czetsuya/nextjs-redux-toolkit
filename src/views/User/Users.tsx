@@ -50,8 +50,6 @@ const EMPTY_ALERT = {
 
 const Users: NextPage = () => {
 
-  console.log('users')
-
   const router = useRouter();
   const dispatch = useAppDispatch();
   const [offset, setOffset] = useState(0);
