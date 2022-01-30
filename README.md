@@ -1,6 +1,6 @@
 # NextTS Integration with Redux Toolkit
 
-This is a template for creating a NextJS application that uses `redux-observable` to manage side effects.
+This is a template for creating a NextJS application that uses `redux-toolkit` to manage side effects.
 
 We use `redux-devtools-extension` when running in developer mode to log actions and state changes and we
 use `redux-persist` to save state between browser refreshes.
