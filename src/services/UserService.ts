@@ -3,10 +3,15 @@ import {BaseService} from "./BaseService";
 import {UserType} from "./types/UserType";
 import {createSlice} from "@reduxjs/toolkit";
 
+interface Pagination {
+  offset: number,
+  limit: number
+}
+
 export const UsersService = BaseService.injectEndpoints({
   endpoints: (build) => ({
-    getUsers: build.query<UserType[], void>({
-      query: () => '/users',
+    getUsers: build.query<UserType[], Pagination>({
+      query: (param: Pagination) => `/users?offset=${param.offset}&limit=${param.limit}`,
       providesTags: [{type: "User", id: "LIST"}]
     }),
     getUser: build.query<UserType, number>({

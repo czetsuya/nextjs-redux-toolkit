@@ -19,6 +19,7 @@ import {
   TableContainer,
   TableFooter,
   TableHead,
+  TablePagination,
   TableRow
 } from "@mui/material";
 import moment from "moment";
@@ -64,7 +65,7 @@ const Users: NextPage = () => {
     isSuccess: isUsersQueried,
     isFetching: isUsersFetching,
     isError: isUsersError
-  } = useGetUsersQuery();
+  } = useGetUsersQuery({offset: (offset * limit), limit});
 
   const [deleteUser, {
     data: deletedUser,
@@ -74,6 +75,14 @@ const Users: NextPage = () => {
 
   const drawerBleeding = 56;
   const [openDrawer, setOpenDrawer] = React.useState(false);
+
+  const handleChangeRowsPerPage = ({target: {value}}) => {
+    setLimit(value);
+  };
+
+  const handleChangePage = (_, nextPage) => {
+    setOffset(nextPage);
+  };
 
   const handleDeleteUser = (userId: number) => async () => {
     try {
@@ -176,14 +185,13 @@ const Users: NextPage = () => {
               </TableBody>
               <TableFooter>
                 <TableRow>
-                  {/*<TablePagination*/}
-                  {/*    component={TableCell}*/}
-                  {/*    count={count}*/}
-                  {/*    page={offset}*/}
-                  {/*    rowsPerPage={limit}*/}
-                  {/*    onChangePage={handleChangePage}*/}
-                  {/*    onChangeRowsPerPage={handleChangeRowsPerPage}*/}
-                  {/*/>*/}
+                  <TablePagination
+                      count={count}
+                      page={offset}
+                      rowsPerPage={limit}
+                      onPageChange={handleChangePage}
+                      onRowsPerPageChange={handleChangeRowsPerPage}
+                  />
                 </TableRow>
               </TableFooter>
             </Table>
@@ -218,7 +226,7 @@ const Users: NextPage = () => {
   }
 
   const renderError = () => {
-    return isUsersError && <Alert severity="error">{error}</Alert>;
+    return isUsersError && <Alert severity="error">{JSON.stringify(error)}</Alert>;
   }
 
   return (
