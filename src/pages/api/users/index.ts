@@ -18,6 +18,11 @@ export default async function handler(
       const users = await prisma.user.findMany({
         skip: parseInt(offset, 10),
         take: parseInt(limit, 10),
+        orderBy: [
+          {
+            id: 'desc',
+          },
+        ]
       });
       const count = await prisma.user.count();
       res.status(200).json({users, count});
